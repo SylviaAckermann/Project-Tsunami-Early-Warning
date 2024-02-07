@@ -7,4 +7,6 @@ Step 1: Simulate displacements of an earthquake of magnitude 7 with the Okada pr
 
 Step 2: Measure GNSS-data of dynamic movements of smartphone data accoring to simulated action
 
-Step 3: Detect displacement of smartphones within GNSS-Data by processing the data with a Kalman-Filter
+Step 3: Detect displacement of smartphones within GNSS-Data
+
+Step 4: Calculate earthquakes epicenter from GNSS-Data-Analysis
