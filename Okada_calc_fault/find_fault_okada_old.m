@@ -15,10 +15,6 @@ y0 = 2147100;
 % define the upper and lower bounds for those parameters we want to
 % constrain the range of:
 
-% Fixed parameters: depth, strike, dip (couple of meters/degrees)
-% Parameters with small intervall: E, N (determinded from seismographic
-% data)
-% Parameters to determine: fault_length, fault_width, slip (huge intervall)
 %                 E , N, depth, strike, dip, fault_length, fault_width,      ,slip
 upper_bounds = [ 30   10   12      90    10       60            60            8000];
 lower_bounds = [-30  -40    2       0   -10        0             0              0];
@@ -30,7 +26,6 @@ rand_vect = rand(1,length(upper_bounds));
 % need the East-North-Up locations of each observation point, and the
 % E-N-U displacements at those points:
 offsetts = read_offsets('20180504_M6_9.dat');
-% load vstack_BIGAMY_seasonals_stepped_rtv.mat
 load rtv.mat
 nsites = length(offsetts);
 
@@ -49,11 +44,12 @@ slipts.latlonelev = [rtv.lat(is) rtv.lon(is) rtv.elev(is)];
 isites = 1:nsites;
 
 % this passes the key data down to the next level of Matlab functions:
-global site_neu_posn site_neu_slip site_neu_err 
+global site_neu_posn site_neu_slip site_neu_err
 
 
 site_neu_slip = slipts.neu_slip(isites,:)'*1000;
 site_neu_err = slipts.neu_err(isites,:)'*1000;
+% d2u: Transformation in UTM-Koordinaten
 [this_x,this_y] = d2u(slipts.latlonelev(isites,2),slipts.latlonelev(isites,1));
 site_neu_posn = [this_y'-y0;this_x'-x0;slipts.latlonelev(isites,3)']./1000;
 
@@ -61,24 +57,14 @@ site_neu_posn = [this_y'-y0;this_x'-x0;slipts.latlonelev(isites,3)']./1000;
 % over the parameter ranges given:
 [okada_params,resnorm,residual,exitflag] =  lsqnonlin('okada_fault_fit',okada_start,lower_bounds,upper_bounds);
 
-okada_struct.E =okada_params(1);       
-okada_struct.N =okada_params(2);
-okada_struct.depth =okada_params(3);
-okada_struct.strike=okada_params(4);
-okada_struct.dip =okada_params(5);
-okada_struct.length =okada_params(6);
-okada_struct.width =okada_params(7);
-okada_struct.slip =okada_params(8);
-
 % plot the fault plane for this solution:
-[hhandles] = plot_okada_fault(okada_struct);
+[hhandles,vhandles] = plot_fault_okada(okada_params);
 
 % calculate the displacements this fault solution predicts
 nsites = size(site_neu_posn,2);
 for is = 1:nsites
     calc_slip(:,is) = calc_fault_okada(okada_params,site_neu_posn(:,is));
 end
-
 
 
 %        E ,       N,      depth,  strike,      dip,   length,    width,  ,slip
