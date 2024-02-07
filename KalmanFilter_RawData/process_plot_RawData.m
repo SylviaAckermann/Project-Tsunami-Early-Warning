@@ -1,4 +1,4 @@
-function [data_pos_all, data_acc_all] = process_plot_RawData(handys, posData, imuData, createPlot)
+function [data_pos_all, data_acc_all] = process_plot_RawData(handys, posData, imuData, createPlot)  
 
 for i = 1:length(handys)
 
@@ -8,8 +8,8 @@ for i = 1:length(handys)
     lon = posData.(handy).longitude;
     u = posData.(handy).height;
 
-    acc = imuData.(handy).acceleration(:,3:5);
-    gyro = imuData.(handy).orientationDeg(:,3:5);
+    %acc = imuData.(handy).acceleration(:,3:5);
+    %gyro = imuData.(handy).orientationDeg(:,3:5);
 
     date = posData.(handy).date;
     
@@ -78,7 +78,8 @@ for i = 1:length(handys)
 
     % save data
     data_pos_all{i} = [posData.(handy)(:,1:3)];
-    data_acc_all{i} = acc;
+    data_acc_all{i} = 0;
+    %data_acc_all{i} = acc;
 
 end
 end
