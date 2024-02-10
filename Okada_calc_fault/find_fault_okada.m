@@ -1,7 +1,56 @@
+% ------------------------------------------------------------------------
+% This script calculates the Okada parameters and earthquake magnitude 
+% from measured displacements
+% INPUT: 
+% ------------------------------------------------------------------------
 
-x0 = 263610;
-y0 = 2147100;
+close all
 
+%% Define Earthquake Scenario
+scenario = 1;
+
+%% Import Simulation Parameters
+okada_params = [];
+
+% Okada Parameters: E, N
+lla0_epicenter = [48.8630556, 9.1344444, 335; 48.7411358, 9.1121643, 429];  %[lat0 lon0 alt0]
+epicenter_all = ["Central epicenter", "Southern epicenter"];
+
+if scenario == 1
+    epicenterIdx = 1;
+elseif sum(scenario == [2:5]) == 1
+    epicenterIdx = 2;
+end
+
+epicenter = epicenter_all(epicenterIdx);
+lat0 = lla0_epicenter(epicenterIdx,1);
+lon0 = lla0_epicenter(epicenterIdx,2);
+okada_params.E = 0;
+okada_params.N = 0;
+
+% Okada Parameter slip
+slip_parameters = [50 20 30 40 50];
+okada_params.slip = slip_parameters(scenario);
+
+% Fixed Okada Parameters
+okada_params.depth = 30*1e3;     % X km deep
+% fault orientation:
+okada_params.strike = 0;   % orientation of the trace of the fault
+okada_params.rake = 19; % slip is in the up-dip (i.e. thrust-fault) direction
+okada_params.dip = 100;     %  fault dip below horizon, looking along-strike
+% fault size
+okada_params.length = 20*1e3;    % along the strike
+okada_params.width = 40*1e3;    % perpendicular to the strike
+
+% slip type/size:
+okada_params.open = 0;
+okada_params.nu = 0.25;
+
+% calculate magnitue from parameters
+shear_modulus = 33 * 1e9; % for crustal rocks
+magnitude_true = moment_magnitude(okada_params.length,okada_params.width,okada_params.slip,shear_modulus);
+    
+%% Okada Parameters
 % okada parameters are:
 % okada_params:  E , N, depth, strike, dip, fault_length, fault_width,      ,slip
 %                1   2    3       4     5        6             7               8
@@ -19,17 +68,21 @@ y0 = 2147100;
 % Parameters with small intervall: E, N (determinded from seismographic
 % data)
 % Parameters to determine: fault_length, fault_width, slip (huge intervall)
-%                 E , N, depth, strike, dip, fault_length, fault_width,      ,slip
-upper_bounds = [ 30   10   12      90    10       60            60            8000];
-lower_bounds = [-30  -40    2       0   -10        0             0              0];
-okada_start  = [ 20  -10    5      10     0       30            20            1000];
+
+%                 E , N,   depth, strike, dip, fault_length, fault_width, slip
+okada_start = [  0,   0,   30000,  0,     100,     10000,       10000,    30];
+upper_bounds = [ 20   20   30000   0      100      50000         50000    100];
+lower_bounds = [-20  -20   30000   0      100       1000          1000     10];
+
 
 rand_vect = rand(1,length(upper_bounds));
+okada_params_true = okada_params;
 
+%% Calculate Epicenter
 
 % need the East-North-Up locations of each observation point, and the
 % E-N-U displacements at those points:
-offsetts = read_offsets('20180504_M6_9.dat');
+offsetts = read_offsets('displacementS1.dat');
 % load vstack_BIGAMY_seasonals_stepped_rtv.mat
 load rtv.mat
 nsites = length(offsetts);
@@ -55,6 +108,7 @@ global site_neu_posn site_neu_slip site_neu_err
 site_neu_slip = slipts.neu_slip(isites,:)'*1000;
 site_neu_err = slipts.neu_err(isites,:)'*1000;
 [this_x,this_y] = d2u(slipts.latlonelev(isites,2),slipts.latlonelev(isites,1));
+[x0,y0] = d2u(lon0,lat0);
 site_neu_posn = [this_y'-y0;this_x'-x0;slipts.latlonelev(isites,3)']./1000;
 
 % solve for the best fitting Okada fault based on a non-linear inversion
@@ -79,14 +133,24 @@ for is = 1:nsites
     calc_slip(:,is) = calc_fault_okada(okada_params,site_neu_posn(:,is));
 end
 
-
+[site_neu_slip' calc_slip']
 
 %        E ,       N,      depth,  strike,      dip,   length,    width,  ,slip
 %    18.8844  -10.0000    3.5140   50.0000    2.7679   50.0000   34.3075  445.7623
 %   25.0632  -24.5441    2.0000   51.1236    0.4174   39.6421   60.0000  600.0000
-disp(['    E ,      N,   depth, strike,  dip, length, width, slip'])
-okada_str = sprintf(' %6.2f   %6.2f  %5.2f  %5.1f   %4.1f  %5.1f  %5.1f  %6.1f\n',okada_params);
-disp(okada_str)
 
+magnitude_calc = moment_magnitude(okada_struct.length,okada_struct.width,okada_struct.slip,shear_modulus);
 
-[site_neu_slip' calc_slip']
+disp('Okada parameters fault calculation:')
+disp('    E ,      N,   depth, strike,  dip,    length,    width,    slip,    magnitude')
+okada_str_calc = sprintf(' %6.2f   %6.2f  %5.0f  %5.0f  %4.0f       %5.1f     %5.0f   %6.1f      %2.1f\n',okada_params,magnitude_calc);
+disp(okada_str_calc)
+
+disp('True Okada parameters of earthquake simulation:')
+okada_params_true_print = [0, 0, okada_params_true.depth,okada_params_true.strike, okada_params_true.dip,...
+                            okada_params_true.length, okada_params_true.width, okada_params_true.slip];
+disp('    E ,      N,   depth, strike,  dip,    length,    width,    slip,    magnitude')
+okada_str_true = sprintf(' %6.2f   %6.2f  %5.0f  %5.0f  %4.0f       %5.1f     %5.0f   %6.1f      %2.1f\n',okada_params_true_print,magnitude_true);
+disp(okada_str_true)
+    
+
