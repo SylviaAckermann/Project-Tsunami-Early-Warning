@@ -66,7 +66,6 @@ for is = 1:nsites
     calc_slip(:,is) = calc_fault_okada(okada_params,site_neu_posn(:,is));
 end
 
-
 %        E ,       N,      depth,  strike,      dip,   length,    width,  ,slip
 %    18.8844  -10.0000    3.5140   50.0000    2.7679   50.0000   34.3075  445.7623
 %   25.0632  -24.5441    2.0000   51.1236    0.4174   39.6421   60.0000  600.0000

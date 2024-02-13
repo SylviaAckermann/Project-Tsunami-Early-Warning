@@ -7,9 +7,9 @@
 close all
 
 %% Define Earthquake Scenario
-scenario = 5;
+scenario = 1;
 
-%% Import Simulation Parameters
+%% Import Simulation Parameters 
 okada_params = [];
 
 % Okada Parameters: E, N
@@ -70,9 +70,9 @@ magnitude_true = moment_magnitude(okada_params.length*1e3,okada_params.width*1e3
 % Parameters to determine: fault_length, fault_width, slip (huge intervall)
 
 %                 E , N,   depth, strike, dip, fault_length, fault_width, slip
-okada_start = [  0,   0,   30,  0,     100,     10,       10,    30];
-upper_bounds = [ 20   20   30   0      100      50        50    100];
-lower_bounds = [-20  -20   30   0      100       1         1     10];
+okada_start = [  100,   100,   30,  0,     100,     10,       10,    30];
+upper_bounds = [ 1000   8000   30   0      100      50        50    100];
+lower_bounds = [0  0   30   0      100       1         1     10];
 
 
 rand_vect = rand(1,length(upper_bounds));
@@ -94,8 +94,8 @@ slipts = [];
 
 for isite = 1:nsites
     slipts.stnm(isite,:)=offsetts(isite).site;
-    slipts.neu_slip(isite,:)=offsetts(isite).neu_offset*1e3;
-    slipts.neu_err(isite,:)=[.0005 .0005 .0015];
+    slipts.neu_slip(isite,:)=offsetts(isite).neu_offset;
+    slipts.neu_err(isite,:)=[0.003 0.003 0.005];%[.0005 .0005 .0015];
 end
 
 is = stname2num(slipts.stnm,rtv.stnm)
@@ -113,14 +113,14 @@ site_neu_err = slipts.neu_err(isites,:)'*1000;
 [x0,y0] = d2u(lon0,lat0);
 x0 = x0*1e-3;
 y0 = y0*1e-3;
-site_neu_posn = [this_y'-y0;this_x'-x0;slipts.latlonelev(isites,3)']./1000;
+site_neu_posn = [this_y';this_x';slipts.latlonelev(isites,3)']./1000;
 
 % solve for the best fitting Okada fault based on a non-linear inversion
 % over the parameter ranges given:
 [okada_params,resnorm,residual,exitflag] =  lsqnonlin('okada_fault_fit',okada_start,lower_bounds,upper_bounds);
 
-okada_struct.E =okada_params(1)*1e3;       
-okada_struct.N =okada_params(2)*1e3;
+okada_struct.E =okada_params(1);       
+okada_struct.N =okada_params(2);
 okada_struct.depth =okada_params(3);
 okada_struct.strike=okada_params(4);
 okada_struct.dip =okada_params(5);
@@ -129,7 +129,7 @@ okada_struct.width =okada_params(7);
 okada_struct.slip =okada_params(8);
 
 % plot the fault plane for this solution:
-[hhandles] = plot_okada_fault(okada_struct);
+%[hhandles] = plot_okada_fault(okada_struct);
 
 % calculate the displacements this fault solution predicts
 nsites = size(site_neu_posn,2);
@@ -138,10 +138,6 @@ for is = 1:nsites
 end
 
 [site_neu_slip' calc_slip']
-
-%        E ,       N,      depth,  strike,      dip,   length,    width,  ,slip
-%    18.8844  -10.0000    3.5140   50.0000    2.7679   50.0000   34.3075  445.7623
-%   25.0632  -24.5441    2.0000   51.1236    0.4174   39.6421   60.0000  600.0000
 
 magnitude_calc = moment_magnitude(okada_struct.length*1e3,okada_struct.width*1e3,okada_struct.slip,shear_modulus);
 %%
@@ -155,7 +151,7 @@ disp(T_okada_calc);
 
 % True Parameters
 disp('True Okada parameters of earthquake simulation:')
-T_okada_true = table(0, 0, okada_params_true.depth,okada_params_true.strike, okada_params_true.dip,...
+T_okada_true = table(x0, y0, okada_params_true.depth,okada_params_true.strike, okada_params_true.dip,...
                      okada_params_true.length, okada_params_true.width, okada_params_true.slip, magnitude_true,...
     'VariableNames', {'E[m]', 'N[m]', 'depth[km]', 'strike[°]', 'dip[°]', 'length[km]', 'width[km]', 'slip[m]', 'magnitude'});
 disp(T_okada_true);

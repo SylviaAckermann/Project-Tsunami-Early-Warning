@@ -16,7 +16,7 @@ if nargin < 3
 end
 
 if isempty(zone)
-    zone = utmzone(nanmedian(lat(:)),nanmedian(lon(:)));
+    zone = utmzone(median(lat(:)),median(lon(:)));
 end
 
 zonelims = utmzone(zone);
