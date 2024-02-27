@@ -11,11 +11,11 @@ slip_parameters = [20 30 40 50];
 
 i = 1;
 
-for e = 1:2 %length(epicenter_all)
+for e = 1 %1:length(epicenter_all)
     epicenter = epicenter_all(e)
     lla0 = lla0_epicenter(e,:)
 
-for s = 4:length(slip_parameters)
+for s = 1:length(slip_parameters)
 
     %% okada_parameters
     okada_params = [];

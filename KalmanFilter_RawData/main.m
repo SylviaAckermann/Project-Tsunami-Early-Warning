@@ -6,12 +6,12 @@ clc
 
 plotRawData = true;
 plotFilteredData = true;
-plotFilteredData_onMap = false;
+plotFilteredData_onMap = true;
 
 %[posData, imuData] = loadRawData();
 
 %phones = {'H1','H2','H4','H5','H6','H7'};
-phones = {'H2'};
+phones = {'H6'};
 
 [data_pos, data_acc] = process_plot_RawData(phones, posData, imuData, plotRawData);
 

@@ -1,13 +1,12 @@
 % ------------------------------------------------------------------------
 % This script calculates the Okada parameters and earthquake magnitude 
 % from measured displacements
-% INPUT: 
 % ------------------------------------------------------------------------
 
 close all
 
 %% Define Earthquake Scenario
-scenario = 1;
+scenario = 3;
 
 %% Import Simulation Parameters 
 okada_params = [];
@@ -70,9 +69,9 @@ magnitude_true = moment_magnitude(okada_params.length*1e3,okada_params.width*1e3
 % Parameters to determine: fault_length, fault_width, slip (huge intervall)
 
 %                 E , N,   depth, strike, dip, fault_length, fault_width, slip
-okada_start = [  100,   100,   30,  0,     100,     10,       10,    30];
-upper_bounds = [ 1000   8000   30   0      100      50        50    100];
-lower_bounds = [0  0   30   0      100       1         1     10];
+okada_start = [  500,   4000,   30,  0,     100,     10,       10,    30];
+upper_bounds = [ 1000   6000   30   0      100      50        50    100];
+lower_bounds = [0  4000   30   0      100       1         1     10];
 
 
 rand_vect = rand(1,length(upper_bounds));
